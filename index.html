@@ -9,9 +9,34 @@
     <meta name="author" content="">
     <link rel="shortcut icon" href="favicon.ico">
 
+    <style>
+    #panel-node {
+      margin-top: 80px;
+    }
+    #panel-task {
+      padding: 30px;
+
+    }
+    #code {
+      width: 100%;
+      margin: 20px auto;
+      border: 1px solid #AAA;
+    }
+    #contorl {
+      margin: 20px auto;
+      padding: 20px;
+    }
+    </style>
+
     <title>My Page</title>
 
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/codemirror.css">
+    <link rel="stylesheet" href="css/rubyblue.css">
+    <script src="js/codemirror.js"></script>
+    <script src="js/codemirror/javascript.js"></script>
+    <script src="js/codemirror/active-line.js"></script>
+    <script src="js/codemirror/matchbrackets.js"></script>
 
   <body>
     <!-- Fixed navbar -->
@@ -24,7 +49,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">Web Cloud</a>
+          <a class="navbar-brand" href="#">WebCloud</a>
         </div>
         <div class="navbar-collapse collapse">
 
@@ -40,10 +65,9 @@
 
     <div class="container">
       <!-- <div class="jumbotron" style="margin-top: 80px;"></div>-->
-      <div class="panel panel-default" style="margin-top: 80px;">
+      <div class="panel panel-default" id="panel-node">
         <!-- Default panel contents -->
         <div class="panel-heading"><strong>Compute Nodes</strong></div>
-
         <table class="table">
           <thead>
            <tr>
@@ -59,23 +83,22 @@
         </table>
       </div>
 
-      <div class="panel panel-default">
-        <div class="panel-heading"><b>Tasks</b></div>
-        <table class="table">
-          <thead>
-           <tr>
-              <th>Tasks ID</th>
-              <th>Label</th>
-              <th>Assign To</th>
-              <th>Result</th>
-            </tr>
-          </thead>
-          <tbody id="node-list">
-            
-          </tbody>
-         
-        </table>
-    </div>
+     <h3>Code</h3>
+      <div class="panel panel-default" id="panel-task">
+        <div> 
+          <textarea id="code"></textarea> 
+        </div>
+        <br />
+        <div id="control">
+          <!--<button class="btn">Test</button>-->
+          <button class="btn btn-primary" id="execute">Run</button>
+        </div>
+      </div>
+
+      <h3>Output</h3>
+      <div class="panel panel-default" id="panel-task">
+
+      </div>
 
     </div> <!-- /container -->
 
@@ -96,5 +119,26 @@
       });
 
     </script>
+    <script>
+      var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+        lineNumbers: true,
+        styleActiveLine: true,
+        matchBrackets: true,
+        theme: 'rubyblue'
+      });
+
+      $("#execute").click(function(){
+
+         var program = editor.getValue();
+         console.log( program );
+
+         /*-------------------------------------------
+         TODO - excute the code on all nodes
+         ---------------------------------------------*/
+         //eval( program );
+      });
+
+    </script>
+
   </body>
 </html>

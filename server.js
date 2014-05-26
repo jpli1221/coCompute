@@ -48,12 +48,23 @@ io.sockets.on('connection', function (socket) {
 
   socket.emit('init', { nodes: wc.nodes.list });
 
+  socket.on('program', function(data) {
+      console.log(wc.nodes.list);
+      wc.nodes.list.forEach(function(node){
+         io.sockets.socket(node['socket_id']).emit("compute", data);
+      });
+  });
+  
+  socket.on('result', function(data) {
+      console.log("result: " + data);
+      
+  });
+
   socket.on('disconnect', function () {
     io.sockets.emit('user disconnected');
     console.log(socket.id);
   });
 
 });
-
 
 console.log("testing");

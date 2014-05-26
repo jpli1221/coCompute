@@ -117,25 +117,28 @@
         $("#node-list").append( "<tr><td>" + data.id + "</td><td>" + data.ip + "</td><td>1</td></tr>" );
         console.log(data);
       });
+      
+      socket.on('compute', function(data) {
+        console.log('start compute');
+        var task = new Function( data.task );
+        console.log(data);
+      });
 
-    </script>
-    <script>
       var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
         lineNumbers: true,
         styleActiveLine: true,
         matchBrackets: true,
         theme: 'rubyblue'
       });
-
+      
       $("#execute").click(function(){
 
          var program = editor.getValue();
-         console.log( program );
-
-         /*-------------------------------------------
-         TODO - excute the code on all nodes
-         ---------------------------------------------*/
-         //eval( program );
+         eval( program );
+         var as_string = task.toString();
+  
+         console.log(task);
+         socket.emit('program', {data: data, task: as_string});   
       });
 
     </script>

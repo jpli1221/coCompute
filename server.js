@@ -57,7 +57,6 @@ io.sockets.on('connection', function (socket) {
   
   socket.on('result', function(data) {
       console.log("result: " + data);
-      
   });
 
   socket.on('disconnect', function () {

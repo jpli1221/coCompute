@@ -13,7 +13,7 @@
     #panel-node {
       margin-top: 80px;
     }
-    #panel-task {
+    #panel-task, #panel-output {
       padding: 30px;
 
     }
@@ -87,18 +87,25 @@
       <div class="panel panel-default" id="panel-task">
         <div> 
           <textarea id="code">
-var data = [1,2,3,4,5,6,7,8,9,10,11,12];
+//example
+data: [1,2,3,4,5,6,7,8,9,10,11,12],
 
-var task = function(){
- 
-  var sum = 0;
-  for(var i=0; i<arguments[0].length; i++) {
-    sum += arguments[0][i];
+compute: function(data){
+  var sum = 0, size = data.length;
+  for(var i=0; i<size/NUM_NODE; i++) {
+    sum += data[NODE_ID*size/NUM_NODE+i];
+
   }
-  
+  return sum; 
+},   
+
+postcompute: function(result) {
+  var sum = 0;
+  for(var i=0; i<NUM_NODE; i++) {
+    sum += result[i];
+  }
   return sum;
-      
-};
+}
           </textarea> 
         </div>
         <br />
@@ -109,7 +116,7 @@ var task = function(){
       </div>
 
       <h3>Output</h3>
-      <div class="panel panel-default" id="panel-task">
+      <div class="panel panel-default" id="panel-output">
 
       </div>
 
@@ -119,6 +126,43 @@ var task = function(){
     <script src="js/bootstrap.min.js"></script>
     <script src="js/socket.io.min.js"></script>
     <script>
+
+      function decode(str){
+          return JSON.parse(str, function (key, value) {
+            if (typeof value != 'string') {
+              return value;
+            }
+            if (value.length < 8) {
+              return value;
+            }
+
+            var prefix = value.substring(0, 8);
+
+            if (prefix === 'function') {
+              return eval('(' + value + ')');
+            }
+            if (prefix === '_PxEgEr_') {
+              return eval(value.slice(8));
+            }
+
+            return value;
+        });
+      }
+
+      function encode(obj) {
+
+        return JSON.stringify(obj, function (key, value) {
+          if (value instanceof Function || typeof value == 'function') {
+            return value.toString();
+          }
+          if (value instanceof RegExp) {
+            return '_PxEgEr_' + value;
+          }
+          return value;
+        });
+      };
+
+
       var socket = io.connect('http://'+window.location.hostname+":7000");
       socket.on('init', function (data) {
         data.nodes.forEach(function(n) {
@@ -133,15 +177,34 @@ var task = function(){
       
       socket.on('compute', function(data) {
         console.log('start compute');
-        var s =  data.task.replace('function ()','') ;
-        console.log(s);
-        var data = data.data;
-        var task = new Function(s);
-        var result = task(data);
+        //var s =  data.task.replace('function ()','') ;
+        //var task = new Function(s);
+
+        var NUM_NODE = data.NUM_NODE;
+        var NODE_ID = data.node_id;
+
+        var task = eval( '(' + data.compute + ')' );
+
+        console.log(task);
+        var result = task(data.data);
 
         console.log('done, send result to master:' , result);
-        socket.emit('result', {result: result}); 
+        socket.emit('result', result); 
       });
+
+      socket.on('complete', function(data) {
+        var out = "";
+
+        for(var i=0; i<data.results.length; i++)
+           out += "<h5>node " + i + ": " + data.results[i] + "</h5>";
+
+        out += "<h4>Final Result: " + data.final_result + "</h4>";
+
+        $("#panel-output").html(out);
+
+ 
+      });
+
 
       var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
         lineNumbers: true,
@@ -152,13 +215,15 @@ var task = function(){
       
       $("#execute").click(function(){
 
-         var program = editor.getValue();
+         var codes = editor.getValue();
          //console.log(program);
-         eval(program);
-         var as_string = task.toString();
+         var program = eval("( {"+codes + "} )");
+         
+         var obj = encode(program);
+
+         console.log(obj);
   
-         console.log(task);
-         socket.emit('program', {data: data, task: as_string});   
+         socket.emit('program', obj);   
       });
 
     </script>

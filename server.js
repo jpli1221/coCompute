@@ -82,7 +82,7 @@ io.sockets.on('connection', function (socket) {
       console.log(obj);
 
       wc.nodes.list.forEach(function(node){
-         io.sockets.socket(node['socket_id']).emit("compute", {node_id: node.id, NUM_NODE: wc.nodes.list.length, data: (node_data)?node_data[node[id]]:obj.data, compute: obj.compute});
+         io.sockets.socket(node['socket_id']).emit("compute", {node_id: node.id, NUM_NODE: wc.nodes.list.length, data: (node_data)?node_data[node.id]:obj.data, compute: obj.compute});
       });
   });
  
@@ -91,10 +91,10 @@ io.sockets.on('connection', function (socket) {
     //console.log(nid);
     rc++;
     result_buffer[nid] = result;
-    console.log(result_buffer);
+    //console.log(result_buffer);
 
     if(rc == NUM_NODE){
-              console.log(on_complete);
+      console.log(on_complete);
       if(on_complete) {
         var final_result = on_complete(result_buffer);
       } else {
@@ -104,12 +104,13 @@ io.sockets.on('connection', function (socket) {
       wc.nodes.list.forEach(function(node){ 
          io.sockets.socket(node['socket_id']).emit("complete", {final_result: final_result, results: result_buffer});
       });
+      rc = 0;
     }
   }); 
 
   socket.on('disconnect', function () {
-    io.sockets.emit('user disconnected');
     wc.nodes.delete(socket.id);
+    io.sockets.emit('node-disconnect', { nodes: wc.nodes.list });
     console.log("disconnect: " + socket.id);
   });
 

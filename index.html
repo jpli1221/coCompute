@@ -106,7 +106,7 @@ postcompute: function(result) {
   }
   return sum;
 }
-          </textarea> 
+</textarea> 
         </div>
         <br />
         <div id="control">
@@ -162,20 +162,55 @@ postcompute: function(result) {
         });
       };
 
+      var node_list = [];
 
       var socket = io.connect('http://'+window.location.hostname+":7000");
       socket.on('init', function (data) {
+        node_list = data.nodes;
         data.nodes.forEach(function(n) {
             $("#node-list").append( "<tr><td>" + n.id + "</td><td>" + n.ip + "</td><td>1</td></tr>" );
         });
       });
 
+      socket.on('node-disconnect', function (data) {
+        //console.log(data.nodes);
+        var rows = $("#node-list tr")
+        for(var index=0; index< rows.length; index++){
+          console.log(index);
+          if(index > data.nodes.length-1 ){ 
+            rows[index].remove();
+          } else {
+            if(index != data.nodes[index] ) {
+              $(rows[index]).html("<td>" + data.nodes[index].id + "</td><td>" + data.nodes[index].ip + "</td><td>1</td>" );  
+            }
+              
+          }
+
+        };
+        node_list = data.nodes;
+        //console.log(node_list);       
+      });
+
+
       socket.on('newnode', function (data) {
-        $("#node-list").append( "<tr><td>" + data.id + "</td><td>" + data.ip + "</td><td>1</td></tr>" );
-        console.log(data);
+        var isAdded = false;
+        //console.log(node_list.length);
+        for(var i=0; i<node_list.length; i++){
+          if(data.id == node_list[i].id) 
+            //console.log(node_list[i]);
+            isAdded = true;
+        }
+        //console.log(isAdded);
+        if(!isAdded){
+          $("#node-list").append( "<tr><td>" + data.id + "</td><td>" + data.ip + "</td><td>1</td></tr>" );
+          node_list.push(data);
+        }
+          
+        //console.log(data);
       });
       
       socket.on('compute', function(data) {
+        console.log('received data from master: ', data.data);
         console.log('start compute');
         //var s =  data.task.replace('function ()','') ;
         //var task = new Function(s);
@@ -185,7 +220,7 @@ postcompute: function(result) {
 
         var task = eval( '(' + data.compute + ')' );
 
-        console.log(task);
+        //console.log(task);
         var result = task(data.data);
 
         console.log('done, send result to master:' , result);
@@ -195,10 +230,24 @@ postcompute: function(result) {
       socket.on('complete', function(data) {
         var out = "";
 
-        for(var i=0; i<data.results.length; i++)
-           out += "<h5>node " + i + ": " + data.results[i] + "</h5>";
+        console.log(data);
 
-        out += "<h4>Final Result: " + data.final_result + "</h4>";
+        for(var i=0; i<data.results.length; i++){
+
+          out += "<h5>node " + i + ": " + data.results[i] + "</h5>";
+
+        }
+        
+      
+        if(data.final_result.length>1){
+          out += "<h4>Final Result:</h4>";
+          for(var i=0; i<data.final_result.length-1; i++){
+            out += '<h4 style="margin-left: 30px;">' + data.final_result[i] + "</h4>";
+          }
+        } else {
+          out += "<h4>Final Result: " + data.final_result + "</h4>";
+        }
+        
 
         $("#panel-output").html(out);
 
@@ -221,7 +270,7 @@ postcompute: function(result) {
          
          var obj = encode(program);
 
-         console.log(obj);
+         //console.log(obj);
   
          socket.emit('program', obj);   
       });

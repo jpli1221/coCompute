@@ -30,7 +30,11 @@ exports.nodes = {
 		    if(socket_id == this.list[i].socket_id) index = this.list[i].id;
 		};
 
-		if(index>-1) this.list.splice(index, 1);
+		if(index>-1) { 
+		   this.list[index] = this.list[this.list.length-1]
+		   this.list[index].id = index;
+		   this.list.splice(this.list.length-1, 1);
+		}
 	},
 
 	get: function(key) {

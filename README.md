@@ -1,2 +1,2 @@
-webcloud
+CoCompute.js - Collaborative Computing using JavaScript
 ========
